@@ -68,20 +68,69 @@ void get_dns_domain_name(u_char *ptr,const u_char * payload);
 int main()
 {
 	char *device = NULL;
+	char dev[100];
 	char errbuf[PCAP_ERRBUF_SIZE];
 	static char *filter = "src port 53 and (udp or tcp)";
 	bpf_u_int32 netmask,ip;
 	struct bpf_program bpf;
 	pcap_t *phandle;
 	int link_type;
-	 
+	int deviceNum=0;
+	pcap_if_t *getNetCardInfo=NULL,*d=NULL;//getNetCardInfo保存设备信息
+
 	memset(errbuf,0,PCAP_ERRBUF_SIZE);
+	memset(dev,0,100);
+	//找到当前所有可用的网络设备(网卡)
+	if(pcap_findalldevs(&getNetCardInfo,errbuf)==-1)
+	{
+		fprintf(stderr,"Error in pcap_findalldevs:%s\n",errbuf);
+		exit(EXIT_FAILURE);
+	}
+
+	printf("All available network devices:\n");
+	for(d=getNetCardInfo;d;d=d->next)
+	{
+		printf("Device %d: %s  ",++deviceNum,d->name);
+		if(d->description)
+			printf("Description: %s  ",d->description);
+		else
+			printf("Description: no description available  ");
+		
+		switch(d->flags)
+		{
+			case PCAP_IF_LOOPBACK:
+				printf("Flag: LOOKBACK");break;
+			case PCAP_IF_UP:
+				printf("Flag: UP");break;
+			case PCAP_IF_RUNNING:
+				printf("Flag: RUNNING");
+		}
+
+		printf("\n");
+	}
+
+	if(deviceNum==0)
+	{
+		printf("No device found!\n");
+		exit(0);
+	}
+	
 	device = pcap_lookupdev(errbuf);
 	if(device == NULL)
 	{
-		perror(errbuf);
-		return 0;
+		fprintf(stderr,"Could not find default device: %s\n",errbuf);
+		exit(0);
 	}
+	
+	printf("\nSuggestion device: %s\n",device);
+	//指定在哪个设备上捕获数据包
+	printf("Please select a device to capture packets: ");
+	while(scanf("%s",dev)!=1)
+	{
+		printf("Wrong Input! Please Try Again\n");
+	}
+
+	device = dev;
 
 	phandle = pcap_open_live(device,65535,0,500,errbuf);
 	if(phandle == NULL)
