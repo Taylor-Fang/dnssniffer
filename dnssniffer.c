@@ -164,7 +164,7 @@ int main()
 	return 0;
 }
 
-/* return 0 on sucess, 1 on error  */
+/* 返回0表示正确, 1表示错误 */
 int next_packet(pcap_t * phandle,int link_type)
 {
 	struct pcap_pkthdr *pkt_hdr = NULL;
@@ -278,7 +278,7 @@ int dissect_ip_packet(int link_type,struct pcap_pkthdr *header,const u_char *pkt
 		case IPPROTO_TCP:
 			dpkt->src_port = ntohs(((struct tcphdr *)ptr)->source);
 			dpkt->dest_port = ntohs(((struct tcphdr *)ptr)->dest);
-			ptr += (((struct tcphdr *)ptr)->doff << 2);//  + 1; //需要+1吗？？？
+			ptr += (((struct tcphdr *)ptr)->doff << 2);//  + 1; 
 			break;
 		default:
 			protocol = 0;
@@ -314,7 +314,7 @@ int dissect_ip_packet(int link_type,struct pcap_pkthdr *header,const u_char *pkt
 }
 
 /* 解析DNS响应数据包输出DNS数据包相关信息 */
-/* return 1 on fatal error, 0 otherwise */
+/* 返回1表示错误, 0表示成功 */
 int dissect_dns_packet(struct dispkt *dpkt,struct pcap_pkthdr *header)
 {
 	struct dnshdr * dh;
