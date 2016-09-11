@@ -9,6 +9,7 @@ gcc -O2 -o dnssniffer dnssniffer.c -lpcap -lpthread
 
 输入:
 程序运行后，会显示可用的网络设备(如下所示)，需要手动输入工作的网络设备.
+
 All available network devices:
 Device 1: ens33  Description: no description available  
 Device 2: any  Description: Pseudo-device that captures on all interfaces  
@@ -19,9 +20,11 @@ Device 6: usbmon1  Description: USB bus number 1
 Device 7: usbmon2  Description: USB bus number 2  
 
 Suggestion device: ens33
+
 Please select a device to capture packets:
 
 输出，如下所示：
+
 Source Mac:00:0c:29:09:d9:7d	Destination Mac:bc:46:99:e2:92:39
 Source IP:192.168.1.1	Destination IP:192.168.1.104
 Source Port:53		Destination Port:31173
