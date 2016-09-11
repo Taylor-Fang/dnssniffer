@@ -16,12 +16,22 @@
 #include <netinet/udp.h>
 #include <netinet/if_ether.h>
 #include <ifaddrs.h>
+#include <pthread.h>
 
 #define check_packet_ptr(PKT,DATA,LEN) ((PKT) >= ((DATA) + (LEN)))
 
 static char ipbuf[BUFSIZ];		/* 存储应答数据 */
 static char domain[BUFSIZ];
 static int subscript;
+pthread_mutex_t mutex;
+
+/*线程函数参数结构*/
+struct thread_paras
+{
+	pcap_t *handle;
+	int link_type;
+};
+
 /* 解析后的TCP/UDP数据包结构*/
 struct dispkt
 {
@@ -64,6 +74,7 @@ int dissect_dns_packet(struct dispkt *dpkt,struct pcap_pkthdr *header);
 void output_dns_query_domain(u_char *ptr,uint16_t qcount);
 u_char * skip_to_answer(u_char *ptr,uint16_t qcount);
 void get_dns_domain_name(u_char *ptr,const u_char * payload);
+void *thread_run(void *args);
 
 int main()
 {
@@ -77,6 +88,8 @@ int main()
 	int link_type;
 	int deviceNum=0;
 	pcap_if_t *getNetCardInfo=NULL,*d=NULL;//getNetCardInfo保存设备信息
+	pthread_t thread[10];
+	struct thread_paras params;
 
 	memset(errbuf,0,PCAP_ERRBUF_SIZE);
 	memset(dev,0,100);
@@ -159,9 +172,25 @@ int main()
 		pcap_perror(phandle,"Error instaling filter:");
 		return 0;
 	}
+	
+	params.handle=phandle;
+	params.link_type=link_type;
+	pthread_mutex_init(&mutex,NULL);
+	for(int i=0;i<10;i++)
+		pthread_create(&thread[i],NULL,thread_run,&params);
+	for(int i=0;i<10;i++)
+		pthread_join(thread[i],NULL);
+	pthread_mutex_destroy(&mutex);
 
-	while(!next_packet(phandle,link_type));
 	return 0;
+}
+
+/*线程函数*/
+void *thread_run(void *args)
+{
+	struct thread_paras *param=args;
+	while(!next_packet(param->handle,param->link_type));
+
 }
 
 /* 返回0表示正确, 1表示错误 */
@@ -171,8 +200,10 @@ int next_packet(pcap_t * phandle,int link_type)
 	struct dispkt dpkt;
 	const u_char * pkt_data = NULL;
 	int flag;
-
+	
+	pthread_mutex_lock(&mutex);
 	flag = pcap_next_ex(phandle,&pkt_hdr,&pkt_data);
+	pthread_mutex_unlock(&mutex);
 	if( flag < 0)
 	{
 		pcap_perror(phandle,"Error capturing packet\n");
