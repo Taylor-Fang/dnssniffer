@@ -40,7 +40,6 @@ No Error
 Domain Name:www.baidu.com
 CNAME:www.a.shifen.com
 
-
 注意：
 1、本程序设置网卡为非混杂模式，只能捕捉本机的DNS数据包。如需将网络接口置于混杂模式下，请手动修改dnssniffer.c:148行。同时sudo ifconfig eth0(所工作的网卡) promisc
 
